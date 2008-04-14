@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CheckSites>
+ <DefaultMail>defaultAdres@provider.nl</DefaultMail> 
+<Site>
+<URL>http://www.nldelphi.com</URL>
+<Mail>mail1@adres.nl;mail2@adres.com</Mail>
+</Site>
+</CheckSites>

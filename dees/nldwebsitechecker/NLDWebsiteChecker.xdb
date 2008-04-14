@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xdb="http://www.borland.com/schemas/delphi/6.0/XMLDataBinding">
+	<xs:element name="CheckSites" type="CheckSitesType"/>
+	<xs:complexType name="CheckSitesType"><xs:annotation>
+			<xs:appinfo xdb:identifierName="IXMLSiteboekType" xdb:docElement="CheckSites"/>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="DefaultMail" type="xs:string"/>
+			<xs:element name="Site" type="SiteType" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SiteType"><xs:annotation>
+			<xs:appinfo xdb:repeated="True"/>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="URL" type="xs:string"><xs:annotation>
+					<xs:appinfo/>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Mail" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
