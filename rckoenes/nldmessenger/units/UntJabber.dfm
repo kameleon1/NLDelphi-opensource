@@ -1,0 +1,41 @@
+object DmJabber: TDmJabber
+  OldCreateOrder = False
+  Left = 256
+  Top = 137
+  Height = 154
+  Width = 179
+  object JabberSession: TJabberSession
+    AutoConnect = False
+    ConnectKind = ckRunningOrNew
+    OnConnect = JabberSessionConnect
+    OnDisconnect = JabberSessionDisconnect
+    OnAuthError = JabberSessionAuthError
+    OnCommError = JabberSessionCommError
+    OnRosterStart = JabberSessionRosterStart
+    OnRosterEnd = JabberSessionRosterEnd
+    OnMessage = JabberSessionMessage
+    OnPresence = JabberSessionPresence
+    OnSubscriptionRequest = JabberSessionSubscriptionRequest
+    OnSubscriptionApproved = JabberSessionSubscriptionApproved
+    OnSubscriptionDenied = JabberSessionSubscriptionDenied
+    OnXML = JabberSessionXML
+    OnAgentsStart = JabberSessionAgentsStart
+    OnAgentItem = JabberSessionAgentItem
+    OnAgentsEnd = JabberSessionAgentsEnd
+    OnVersionGet = JabberSessionVersionGet
+    OnTimeGet = JabberSessionTimeGet
+    OnVersionResult = JabberSessionVersionResult
+    OnTimeResult = JabberSessionTimeResult
+    OnRosterItemEx = JabberSessionRosterItemEx
+    OnQuery = JabberSessionQuery
+    Left = 16
+    Top = 16
+  end
+  object Timer: TTimer
+    Enabled = False
+    Interval = 60000
+    OnTimer = TimerTimer
+    Left = 96
+    Top = 16
+  end
+end
