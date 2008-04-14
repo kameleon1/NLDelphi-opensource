@@ -1,0 +1,31 @@
+;This help file was created with HelpScribble 7.3.1
+;Licensed to: Henk De Hauw
+
+:BASE TNLDcalendar.hlp
+:TITLE TNLDCalendar helpfile version 1.21 by Eagle00789
+:LINK D7VCL.HLP
+1 TNLDCalendar version 1.21
+2 NLDCalendar unit=Scribble1000
+2 TNLDCalendar component Reference=Scribble1010
+2 Properties
+3 CellText=Scribble1025
+3 CalendarDate=Scribble1020
+3 UseCurrentDate=Scribble1050
+3 Day=Scribble1030
+3 Month=Scribble1035
+3 Year=Scribble1055
+3 StartOfWeek=Scribble1045
+2 Methods
+3 BGFGColor=Scribble1060
+3 DaysPerMonth=Scribble1065
+3 DaysThisMonth=Scribble1070
+3 ChangeMonth=Scribble1080
+3 NextMonth=Scribble1085
+3 PrevMonth=Scribble1095
+3 NextYear=Scribble1090
+3 PrevYear=Scribble1100
+3 IsLeapYear=Scribble1075
+3 ResetColorsAndHints=Scribble1105
+3 SetDateColor=Scribble1110
+3 UpdateCalendar=Scribble1115
+2 Events
