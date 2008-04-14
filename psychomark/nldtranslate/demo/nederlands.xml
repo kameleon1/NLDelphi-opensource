@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<language description="Nederlands">
+  <frmMain Caption="NLDTranslate Demonstratie">
+    <pnlEnum BevelOuter="bvLowered" Caption="&copy; Keuzelijst eigenschap test..." />
+    <sbStatus>
+      <Panels>
+        <Item Index="0" Text="Gewoon" />
+        <Item Index="1" Text="een" />
+        <Item Index="2" Text="TCollection" />
+        <Item Index="3" Text="test..." />
+      </Panels>
+    </sbStatus>
+  </frmMain>
+</language>

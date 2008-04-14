@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<language description="English">
+  <frmMain Caption="NLDTranslate Demo">
+    <pnlEnum BevelOuter="bvRaised" Caption="Enumeration properties test..." />
+    <sbStatus>
+      <Panels>
+        <Item Index="0" Text="Just" />
+        <Item Index="1" Text="a" />
+        <Item Index="2" Text="TCollection" />
+        <Item Index="3" Text="test..." />
+      </Panels>
+    </sbStatus>
+  </frmMain>
+</language>

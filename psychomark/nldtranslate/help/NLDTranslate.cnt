@@ -1,0 +1,71 @@
+:Base NLDTranslate.hlp
+:Title  NLDTranslate v2
+:Index Index for NLDTranslate.hlp=NLDTranslate.hlp
+1 NLDTranslate v2
+2 About NLDTranslate v2=IDH_NLDTranslate v2_Project
+2 Packages
+3 Units
+2 Alphabetical Object and Component Listing
+2 ENLDTFileDoesNotExist=IDH_ENLDTFileDoesNotExist
+2 ENLDTInvalidLangFile=IDH_ENLDTInvalidLangFile
+2 INLDTEvent=IDH_INLDTEvent
+2 INLDTEventSink=IDH_INLDTEventSink
+2 INLDTFileChangeEvent=IDH_INLDTFileChangeEvent
+2 INLDTInterface=IDH_INLDTInterface
+2 INLDTManager=IDH_INLDTManager
+2 INLDTranslate=IDH_INLDTranslate
+2 INLDTTreeItem=IDH_INLDTTreeItem
+2 INLDTTreeWalkEvent=IDH_INLDTTreeWalkEvent
+2 TNLDTBaseComponent=IDH_TNLDTBaseComponent
+2 TNLDTFile=IDH_TNLDTFile
+2 TNLDTFiles=IDH_TNLDTFiles
+2 TNLDTManager=IDH_TNLDTManager
+2 TNLDTranslate=IDH_TNLDTranslate
+2 TNLDTRTTInfo=IDH_TNLDTRTTInfo
+2 TNLDTStringBuffer=IDH_TNLDTStringBuffer
+2 TNLDTTreeItem=IDH_TNLDTTreeItem
+2 Alphabetical Object and Component Listing, By Unit
+3 NLDTGlobal
+3 ENLDTFileDoesNotExist=IDH_ENLDTFileDoesNotExist
+3 ENLDTInvalidLangFile=IDH_ENLDTInvalidLangFile
+3 TNLDTBaseComponent=IDH_TNLDTBaseComponent
+3 TNLDTTreeItem=IDH_TNLDTTreeItem
+3 NLDTInterfaces
+3 INLDTEvent=IDH_INLDTEvent
+3 INLDTEventSink=IDH_INLDTEventSink
+3 INLDTFileChangeEvent=IDH_INLDTFileChangeEvent
+3 INLDTInterface=IDH_INLDTInterface
+3 INLDTManager=IDH_INLDTManager
+3 INLDTranslate=IDH_INLDTranslate
+3 INLDTTreeItem=IDH_INLDTTreeItem
+3 INLDTTreeWalkEvent=IDH_INLDTTreeWalkEvent
+3 NLDTManager
+3 TNLDTFile=IDH_TNLDTFile
+3 TNLDTFiles=IDH_TNLDTFiles
+3 TNLDTManager=IDH_TNLDTManager
+3 NLDTranslate
+3 TNLDTranslate=IDH_TNLDTranslate
+3 NLDTRTTIUtils
+3 TNLDTRTTInfo=IDH_TNLDTRTTInfo
+3 NLDTXDOMUtils
+3 TNLDTStringBuffer=IDH_TNLDTStringBuffer
+2 Alphabetical Routine Listing
+2 NLDTExcludeDelimiter=IDH_NLDTExcludeDelimiter_100030
+2 NLDTIncludeDelimiter=IDH_NLDTIncludeDelimiter_100029
+2 NLDTReplacePathVars=IDH_NLDTReplacePathVars_100031
+2 XDOMCharToEntity=IDH_XDOMCharToEntity_100033
+2 XDOMEntityToChar=IDH_XDOMEntityToChar_100032
+2 XDOMGetAttribute=IDH_XDOMGetAttribute_100034
+2 XDOMGetAttributeByIndex=IDH_XDOMGetAttributeByIndex_100035
+2 XDOMSetAttribute=IDH_XDOMSetAttribute_100036
+2 Alphabetical Routine Listing, By Unit
+3 NLDTGlobal
+3 NLDTExcludeDelimiter=IDH_NLDTExcludeDelimiter_100030
+3 NLDTIncludeDelimiter=IDH_NLDTIncludeDelimiter_100029
+3 NLDTReplacePathVars=IDH_NLDTReplacePathVars_100031
+3 NLDTXDOMUtils
+3 XDOMCharToEntity=IDH_XDOMCharToEntity_100033
+3 XDOMEntityToChar=IDH_XDOMEntityToChar_100032
+3 XDOMGetAttribute=IDH_XDOMGetAttribute_100034
+3 XDOMGetAttributeByIndex=IDH_XDOMGetAttributeByIndex_100035
+3 XDOMSetAttribute=IDH_XDOMSetAttribute_100036
