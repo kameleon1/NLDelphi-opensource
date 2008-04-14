@@ -1,0 +1,5 @@
+NLDMSNP maakt gebruik van de volgende third party sources en zijn nodig om NLDMSNP te compileren:
+
+- md5.pas: http://www.fichtner.net/delphi/md5/
+- TRegExpr: http://anso.da.ru/
+- Indy 9: http://www.indyproject.org/
