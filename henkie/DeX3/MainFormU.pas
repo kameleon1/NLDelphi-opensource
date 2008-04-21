@@ -8,6 +8,9 @@ uses
   NLDXMLIntf, NLDXMLData, DeXTree, NLDNotifier, XPStyleActnCtrls, VirtualTrees, JvComponentBase, JvTabBar,
   FavoritesUnit, XMLIntf, ActnPopup, ActiveX, StdStyleActnCtrls, Buttons, JvExStdCtrls, JvEdit;
 
+const
+  WM_NEWDeX3Instance = WM_USER + $3000;
+
 type
   TMainForm = class(TForm)
     ForumList: TDeXTree;
@@ -278,6 +281,7 @@ type
   protected
     procedure UpdateTabBar(aTab: TJvTabBarItem; aCaption: string; aCount: integer);
     procedure WMSyscommand(var Message: TWmSysCommand); message WM_SYSCOMMAND;
+    procedure WMNewInstance(var Msg: TMessage); message WM_NEWDeX3Instance;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -2636,5 +2640,12 @@ begin
     Sender.IsVisible[Node] := AnsiContainsText(NodeTekst, ZoekTekst);
 end;
 
+procedure TMainForm.WMNewInstance(var Msg: TMessage);
+begin
+  Application.Restore;
+  Application.BringToFront;
+end;
+
 end.
+
 

@@ -132,9 +132,6 @@ implementation
 
 uses
   GetDataU, DateUtils,
-{$IFDEF LOg}
-  Udbg,
-{$ENDIF}
   XMLIntf, IdHTTP, SettingsUnit, Dialogs;
 
 procedure Register;
@@ -169,10 +166,6 @@ end;
 
 procedure TNLDXMLData.DoDataChange;
 begin
-{$IFDEF Log}
-  Debugger.EnterProc('TNLDXMLData.DoDataChange');
-{$ENDIF}
-
   if FChangeCount = 0 then
   begin
     SyncPosts;
@@ -181,39 +174,22 @@ begin
     if Assigned(FOnDataChange) then
       FOnDataChange(Self);
   end;
-
-{$IFDEF Log}
-  Debugger.LeaveProc('TNLDXMLData.DoDataChange');
-{$ENDIF}
 end;
 
 procedure TNLDXMLData.LoadFromFile(const FileName: string);
 begin
-{$IFDEF Log}
-  Debugger.EnterProc('TNLDXMLData.LoadFromFile');
-  Debugger.LogMsg(FileName);
-{$ENDIF}
-
   if FileExists(FileName) then
   begin
     FData := LoadNLDelphiData(FileName);
     SyncPosts;
     DoDataChange;
   end;
-
-{$IFDEF Log}
-  Debugger.LeaveProc('TNLDXMLData.LoadFromFile');
-{$ENDIF}
 end;
 
 procedure TNLDXMLData.SaveToFile(const FileName: string);
 var
   SaveDocument: TTrackXMLDocument;
 begin
-{$IFDEF Log}
-  Debugger.EnterProc('TNLDXMLData.SaveToFile');
-  Debugger.LogMsg(FileName);
-{$ENDIF}
   SaveDocument := TTrackXMLDocument.Create(self);
   try
     SaveDocument.LoadFromXML(FData.XML);
@@ -226,9 +202,6 @@ begin
   finally
     SaveDocument.Free;
   end;
-{$IFDEF Log}
-  Debugger.LeaveProc('TNLDXMLData.SaveToFile');
-{$ENDIF}
 end;
 
 procedure TNLDXMLData.MergeData(NewData: IXMLNLDelphiDataType);
@@ -275,9 +248,6 @@ var
   Forum, NewForum: IXMLForumType;
   Thread, NewThread: IXMLThreadType;
 begin
-{$IFDEF Log}
-  Debugger.EnterProc('TNLDXMLData.MergeData');
-{$ENDIF}
   for ForumIndex := 0 to NewData.Forum.Count - 1 do
   begin
     NewForum := NewData.Forum[ForumIndex];
@@ -337,9 +307,6 @@ begin
   end;
 
   SyncPosts;
-{$IFDEF Log}
-  Debugger.LeaveProc('TNLDXMLData.MergeData');
-{$ENDIF}
 end;
 
 function TNLDXMLData.FindForum(ForumID: Integer): IXMLForumType;
@@ -494,12 +461,10 @@ var
     RowCountNode := NewData.ChildNodes.FindNode('RowCount');
     if not Assigned(RowCountNode) then
       Exit;
-//    UpdateDocument.XML.SaveToFile('C:/Users/Admin/Desktop/Voor RowCount.xml');
     AantalVerwijderd := StrToInt(RowCountNode.Text) - AantalVerwijderd;
     if AantalVerwijderd < 0 then
       AantalVerwijderd := 0;
     RowCountNode.Text := IntToStr(AantalVerwijderd);
-//    UpdateDocument.XML.SaveToFile('C:/Users/Admin/Desktop/Na RowCount.xml');
 
     finally
       Users.Free;
@@ -507,86 +472,39 @@ var
   end;
 
 begin
-{$IFDEF Log}
-  Debugger.EnterProc('TNLDXMLData.ThreadAfterGet');
-  Debugger.LogString('XML data: ', TGetData(Sender).XMLText);
-{$ENDIF}
-
   if Assigned(FAfterUpdate) then
   begin
-{$IFDEF name}
-    Debugger.LogMsg('Start AfterUpdate');
-{$ENDIF}
     FAfterUpdate(Self);
-{$IFDEF Log}
-    Debugger.LogMsg('Einde AfterUpdate');
-{$ENDIF}
   end;
-
-{$IFDEF Log}
-  Debugger.LogMsg('Controleren op error');
-{$ENDIF}
 
   if TGetData(Sender).Error <> '' then
   begin
-{$IFDEF Log}
-    Debugger.LogError(TGetData(Sender).Error);
-{$ENDIF}
-
     if Assigned(FOnError) then
       FOnError(Self, TGetData(Sender).Error);
-
   end;
-{$IFDEF Log}
-  Debugger.LogMsg('XMLDocument maken');
-{$ENDIF}
   UpdateDocument := TTrackXMLDocument.Create(self);
   try
     UpdateDocument.XML.Text := TGetData(Sender).XMLText;
-//    UpdateDocument.XML.SaveToFile('C:/Users/Admin/Desktop/Nieuw tekstdocument1.xml');
     NewData := GetNLDelphiData(UpdateDocument);
 
     if NewData.Error.Text <> '' then
     begin
-{$IFDEF Log}
-      Debugger.LogError(NewData.Error.Text);
-{$ENDIF}
-
       if Assigned(FOnError) then
         FOnError(Self, NewData.Error.Text);
-//      end;
     end else
       IgnoreCertainUsers;
-
-//      UpdateDocument.XML.SaveToFile('C:/Users/Admin/Desktop/Nieuw tekstdocument2.xml');
     if NewData.Forum.Count > 0 then
     begin
-{$IFDEF Log}
-      Debugger.LogMsg(Format('%d regels opgehaald', [NewData.RowCount]));
-{$ENDIF}
-
       if Assigned(FOnNewData) then
       begin
-{$IFDEF Log}
-        Debugger.LogMsg('Start OnNewData');
-{$ENDIF}
         FOnNewData(Self, NewData);
-{$IFDEF Log}
-        Debugger.LogMsg('Einde OnNewData');
-{$ENDIF}
       end;
-
       MergeData(NewData);
-
       DoDataChange;
     end;
   finally
     UpdateDocument.Free;
   end;
-
-{$IFDEF Log}
-  Debugger.LeaveProc('TNLDXMLData.ThreadAfterGet');
-{$ENDIF}
 end;
 
 procedure TNLDXMLData.Timer(Sender: TObject);
@@ -600,23 +518,13 @@ var
 begin
   if FSessionID = '' then
     Exit;
-
-{$IFDEF Log}
-  Debugger.EnterProc('TNLDXMLData.Update');
-  Debugger.LogMsg('Datetime: ' + DateTimeToStr(UnixToDateTime(DateTime)));
-{$ENDIF}
-
   FullURL := FURL + '?SessionID=' + FSessionID;
-
   if DateTime <> 0 then
     FullURL := FullURL + '&LastDateTime=' + IntToStr(DateTime);
-
   if FTimeDiff = -1 then
     GetTimeDiff;
-
   if Assigned(FBeforeUpdate) then
     FBeforeUpdate(Self);
-
   with TGetData.Create do
   begin
     UserAgent := FUserAgent;
@@ -624,10 +532,6 @@ begin
     URL := FullURL;
     Resume;
   end;
-
-{$IFDEF Log}
-  Debugger.LeaveProc('TNLDXMLData.Update');
-{$ENDIF}
 end;
 
 function TNLDXMLData.FindPost(PostID: Integer): IXMLPostType;
@@ -658,16 +562,8 @@ procedure TNLDXMLData.DeletePost(Index: Integer);
 var
   Post: IXMLPostType;
 begin
-{$IFDEF Log}
-  Debugger.EnterProc('TNLDXMLData.DeletePost');
-{$ENDIF}
-
   Post := Posts[Index].Post;
   DeletePost(Post);
-
-{$IFDEF Log}
-  Debugger.LeaveProc('TNLDXMLData.DeletePost');
-{$ENDIF}
 end;
 
 procedure TNLDXMLData.DeletePost(Post: IXMLPostType);
