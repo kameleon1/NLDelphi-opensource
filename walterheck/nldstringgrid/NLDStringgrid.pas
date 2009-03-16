@@ -648,6 +648,7 @@ type
     property Values;
   published
     property AlternatingRowColors;
+    property AutoRowHeights;
     property Columns;
     property ColCount;
     property DefaultDrawing;
@@ -661,8 +662,10 @@ type
     property GridLineWidth;
     property MemoryOptions;
     property OnDrawCell;
+    property OnEditButtonClick;
     property OnTitleClick;
     property Options;
+    property OwnsObjects;
     property ReadOnlyColor;
     property SelectionAlphaBlend;
     property SelectionAlphaBlendValue;
@@ -672,7 +675,6 @@ type
   published
     property Align;
     property Anchors;
-    property AutoRowHeights;
     property BiDiMode;
     property BorderStyle;
     property Color;
@@ -692,7 +694,6 @@ type
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
-    property OnEditButtonClick;
     property OnEndDock;
     property OnEndDrag;
     property OnEnter;
@@ -713,7 +714,6 @@ type
     property OnStartDock;
     property OnStartDrag;
     property OnTopLeftChanged;
-    property OwnsObjects;
     property ParentBiDiMode;
     property ParentColor;
     property ParentCtl3D;
