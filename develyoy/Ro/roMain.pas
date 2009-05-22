@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ComCtrls, ExtCtrls, Menus, ActnList, AppEvnts, ImgList, StdCtrls, ADODB_TLB,
+  ComCtrls, ExtCtrls, Menus, ActnList, AppEvnts, ImgList, StdCtrls, ADODB,
   roHexTree;
 
 var
@@ -134,7 +134,7 @@ type
     { Private declarations }
 
     //voor multi-select
-    mx,my,px,py:integer;
+    //mx,my,px,py:integer;
 
     function GetVisibleCount(Sender:TObject;Exclude:TControl):integer;
     function CloseAll:boolean;
@@ -142,7 +142,7 @@ type
     procedure WMQueryEndSession(var Msg:TWMQueryEndSession); message WM_QueryEndSession;
   public
     { Public declarations }
-    dbCon:TConnection;
+    dbCon:TADOConnection;
     NewItemPos:TPoint;
     ExitCommandCalled:boolean;//vlag voor decentraal globaal te sluiten
     MainIsQuitting:boolean;//vlag voor centraal globaal aan het sluiten
@@ -163,10 +163,9 @@ implementation
 
 uses roDockWin, roDockTabWin, roDockJoinWin, roWinDock, roChildwin,
   Clipbrd, roMsgWin, roNetworks, roConWin, roIdentDock, Variants,
-  roStuff, roSettings;
+  roStuff, roSettings, ADOInt;
 
 {$R *.DFM}
-{$R roHTML.res}
 
 procedure TMainWin.DockDrop(Sender: TObject;
   Source: TDragDockObject; X, Y: Integer);
@@ -253,7 +252,6 @@ var
    adw:=nil;
  end;
 begin
-
  adw:=(dw as TDockWin);
  if adw.Visible=false then adw.Visible:=true;
 
@@ -573,9 +571,10 @@ begin
       Application.Terminate;
      end;
 
-   dbCon:=TConnection.Create(Application);
-   dbCon.CursorLocation:=adUseClient;
-   dbCon.Open(udl,'','',0);
+   dbCon:=TADOConnection.Create(Application);
+   dbCon.CursorLocation:=clUseClient;
+   dbCon.ConnectionString:=udl;
+   dbCon.Open;
 
    //al toolbars openen?
 
@@ -632,20 +631,20 @@ begin
     begin
      IdentDock.ManualDock(DockRight);
      IdentDock.FirstDisplay:=false;
-     DockRight.ClientWidth:=120;
+     if DockRight.Width=0 then DockRight.Width:=120;
     end;
   end;
 end;
 
 procedure TMainWin.File1Click(Sender: TObject);
 var
- rs:TRecordSet;
+ rs:_RecordSet;
  m:TMenuItem;
 begin
  QCon.Clear;
- rs:=TRecordSet.Create(Application);
+ rs:=CoRecordset.Create;
  rs.Open('SELECT * FROM tblNetworks ORDER BY network_name',
-  MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockReadOnly,adCmdText);
+  MainWin.dbCon.ConnectionObject,adOpenDynamic,adLockReadOnly,adCmdText);
  while not(rs.EOF) do
   begin
    m:=TMenuItem.Create(Application);
@@ -656,7 +655,7 @@ begin
    m.OnClick:=QConClick;
    rs.MoveNext;
   end;
- rs.Free;
+ rs:=nil;
 end;                         
 
 procedure TMainWin.QConClick(Sender: TObject);
@@ -807,6 +806,7 @@ end;
 procedure TMainWin.ScrollBox1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
+ {
  if Shift=[ssLeft] then
   begin
    mx:=Mouse.CursorPos.X;
@@ -821,29 +821,32 @@ begin
    NewItemPos:=Point(X,Y);
    GeneralPm.Popup(ScrollBox1.ClientOrigin.X+X,ScrollBox1.ClientOrigin.Y+Y);
   end;
+ }
 end;
 
 procedure TMainWin.ScrollBox1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
+ {
  if SelSquare.Visible then
   begin
    mx:=Mouse.CursorPos.X;
    my:=Mouse.CursorPos.Y;
    SelSquare.BoundsRect:=Rect(px,py,x,y);
   end;
+ }
 end;
 
 procedure TMainWin.ScrollBox1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-
+ {
  if SelSquare.Visible then
   begin
    //selectie opvullen
   end;
-
  SelSquare.Visible:=false;
+ }
 end;
 
 end.

@@ -82,12 +82,10 @@ object PasteWin: TPasteWin
     Height = 21
     Anchors = [akLeft, akBottom]
     Associate = Edit1
-    Min = 0
     Max = 32767
     Position = 500
     TabOrder = 4
     Thousands = False
-    Wrap = False
   end
   object btnSingle: TButton
     Left = 8

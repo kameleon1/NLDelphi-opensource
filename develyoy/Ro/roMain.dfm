@@ -1,6 +1,6 @@
 object MainWin: TMainWin
-  Left = 587
-  Top = 183
+  Left = 351
+  Top = 192
   Width = 640
   Height = 480
   Caption = 'Ro'
@@ -46,7 +46,6 @@ object MainWin: TMainWin
     Top = 4
     Width = 4
     Height = 407
-    Cursor = crHSplit
     MinSize = 15
     Visible = False
   end
@@ -55,7 +54,6 @@ object MainWin: TMainWin
     Top = 4
     Width = 4
     Height = 407
-    Cursor = crHSplit
     Align = alRight
     MinSize = 15
     Visible = False
@@ -66,7 +64,6 @@ object MainWin: TMainWin
     Width = 632
     Height = 19
     Panels = <>
-    SimplePanel = False
   end
   object DockLeft: TPanel
     Left = 4

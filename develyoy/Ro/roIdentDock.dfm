@@ -22,18 +22,6 @@ inherited IdentDock: TIdentDock
       8000000000000000000000000000000000000000000000000000000000000000
       00000000000000000100000000000000000000000000000000000000}
   end
-  object ServerSocket1: TServerSocket
-    Active = False
-    Port = 113
-    ServerType = stNonBlocking
-    OnListen = ServerSocket1Listen
-    OnClientConnect = ServerSocket1ClientConnect
-    OnClientDisconnect = ServerSocket1ClientDisconnect
-    OnClientRead = ServerSocket1ClientRead
-    OnClientError = ServerSocket1ClientError
-    Left = 8
-    Top = 8
-  end
   object PopupMenu1: TPopupMenu
     Images = MainWin.ImageList1
     Left = 40
@@ -68,5 +56,13 @@ inherited IdentDock: TIdentDock
       Caption = 'Word wrap'
       OnExecute = aWordWrapExecute
     end
+  end
+  object TcpServer1: TTcpServer
+    LocalPort = '113'
+    OnAccept = TcpServer1Accept
+    OnGetThread = TcpServer1GetThread
+    OnListening = TcpServer1Listening
+    Left = 8
+    Top = 8
   end
 end

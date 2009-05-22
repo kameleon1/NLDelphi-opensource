@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, roChildWin, OleCtrls, SHDocVw, ExtCtrls, StdCtrls, roConWin,
-  MSHTML_TLB, ActnList, Menus, roStuff, ComCtrls, ImgList, dsDocHost,
+  MSHTML, ActnList, Menus, roStuff, ComCtrls, ImgList, roDocHost,
   ToolWin;
 
 type

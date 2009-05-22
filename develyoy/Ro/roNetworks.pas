@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, roChildWin, ComCtrls, Menus, ActnList, ADODB_TLB;
+  Dialogs, roChildWin, ComCtrls, Menus, ActnList, ADODB;
 
 type
   TNetworkWin = class(TChildWin)
@@ -50,8 +50,8 @@ type
     { Private declarations }
     procedure Refresh;
 
-    function AddNetworkNode(const rs:TRecordSet):TTreeNode;
-    function AddServerNode(const rs:TRecordSet;const p:TTreeNode):TTreeNode;
+    function AddNetworkNode(const rs:_RecordSet):TTreeNode;
+    function AddServerNode(const rs:_RecordSet;const p:TTreeNode):TTreeNode;
 
   public
     { Public declarations }
@@ -79,7 +79,7 @@ var
 
 implementation
 
-uses roMain, roNetworkProps, roServerProps, roConWin, roStuff;
+uses roMain, roNetworkProps, roServerProps, roConWin, roStuff, ADOInt;
 
 {$R *.dfm}
 
@@ -91,7 +91,7 @@ end;
 
 procedure TNetworkWin.aNewNetworkExecute(Sender: TObject);
 var
- rs:TRecordSet;
+ rs:_RecordSet;
 begin
   inherited;
  with NetworkPropWin do
@@ -105,9 +105,9 @@ begin
   end;
  if NetworkPropWin.ShowModal=mrOk then
   begin
-    rs:=TRecordSet.Create(Application);
+    rs:=CoRecordset.Create;
     rs.Open('tblNetworks',//'SELECT * FROM tblNetworks WHERE 0=1',
-     MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockOptimistic,adCmdTable);
+     MainWin.dbCon.ConnectionObject,adOpenDynamic,adLockOptimistic,adCmdTable);
     with NetworkPropWin do
      begin
       rs.AddNew(
@@ -132,33 +132,33 @@ begin
        oView.Selected:=AddNetworkNode(rs);
        if DoConnect then aConnect.Execute;
      end;
-    rs.Free;
+    rs:=nil;
   end;
 end;
 
 procedure TNetworkWin.Refresh;
 var
- rs:TRecordSet;
+ rs:_Recordset;
 begin
  try
   oView.Items.BeginUpdate;
   oView.Items.Clear;
-  rs:=TRecordSet.Create(Application);
+  rs:=CoRecordset.Create;
   rs.Open('tblNetworks',
-   MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockReadOnly,adCmdTable);
+   MainWin.dbCon.ConnectionObject,adOpenDynamic,adLockReadOnly,adCmdTable);
   rs.Sort:='network_name';
   while not(rs.EOF) do
    begin
     AddNetworkNode(rs);
     rs.MoveNext;
    end;
-  rs.Free;
+  rs:=nil;
  finally
   oView.Items.EndUpdate;
  end;
 end;
 
-function TNetworkWin.AddNetworkNode(const rs:TRecordSet):TTreeNode;
+function TNetworkWin.AddNetworkNode(const rs:_RecordSet):TTreeNode;
 var
  n:TTreeNode;
  nd:TNodeData;
@@ -175,7 +175,7 @@ begin
  Result:=n;
 end;
 
-function TNetworkWin.AddServerNode(const rs:TRecordSet;const p:TTreeNode):TTreeNode;
+function TNetworkWin.AddServerNode(const rs:_RecordSet;const p:TTreeNode):TTreeNode;
 var
  n:TTreeNode;
  nd:TNodeData;
@@ -195,7 +195,7 @@ end;
 procedure TNetworkWin.oViewExpanding(Sender: TObject; Node: TTreeNode;
   var AllowExpansion: Boolean);
 var
- rs:TRecordSet;
+ rs:_RecordSet;
  nd:TNodeData;
 begin
   inherited;
@@ -210,16 +210,16 @@ begin
      case nd.objtype of
       alNetwork:
        begin
-        rs:=TRecordSet.Create(Application);
+        rs:=CoRecordset.Create;
         rs.Open('SELECT * FROM tblServers WHERE server_network_id = '+IntToStr(nd.id)+
          ' ORDER BY server_name',
-         Mainwin.dbCon.DefaultInterface,adOpenDynamic,adLockReadOnly,adCmdText);
+         Mainwin.dbCon.ConnectionObject,adOpenDynamic,adLockReadOnly,adCmdText);
         while not(rs.EOF) do
          begin
           AddServerNode(rs,Node);
           rs.MoveNext;
          end;
-        rs.Free;
+        rs:=nil;
        end;
       alServer:;
      end;
@@ -237,7 +237,7 @@ end;
 procedure TNetworkWin.aNewServerExecute(Sender: TObject);
 var
  n:TTreeNode;
- rs:TRecordSet;
+ rs:_Recordset;
  port:integer;
 begin
   inherited;
@@ -262,9 +262,9 @@ begin
     end;
    if ServerPropWin.ShowModal=mrOk then
     begin
-      rs:=TRecordSet.Create(Application);
+      rs:=CoRecordset.Create;
       rs.Open('tblServers',
-       MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockOptimistic,adCmdTable);
+       MainWin.dbCon.ConnectionObject,adOpenDynamic,adLockOptimistic,adCmdTable);
       with ServerPropWin do
        begin
         try
@@ -295,7 +295,7 @@ begin
          oView.Selected:=AddServerNode(rs,n);
          if DoConnect then aConnect.Execute;
        end;
-      rs.Free;
+      rs:=nil;
     end;
 
    //new server
@@ -306,19 +306,19 @@ procedure TNetworkWin.oViewEdited(Sender: TObject; Node: TTreeNode;
   var S: String);
 var
  nd:TNodeData;
- rs:TRecordSet;
+ rs:_Recordset;
 begin
   inherited;
  if not(Node.Data=nil) then
   begin
    nd:=Node.Data;
-   rs:=TRecordSet.Create(Application);
+   rs:=CoRecordset.Create;
    rs.Open(TableName[nd.objtype],
-    MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockOptimistic,adCmdTable);
+    MainWin.dbCon.ConnectionObject,adOpenDynamic,adLockOptimistic,adCmdTable);
    rs.Filter:=IdField[nd.objtype]+' = '+IntToStr(nd.id);
    if not(rs.EOF) then
      rs.Fields.Item[TitleField[nd.objtype]].Value:=s;
-   rs.Free;
+   rs:=nil;
   end;
 end;
 
@@ -337,7 +337,7 @@ begin
     begin
      MainWin.dbCon.Execute(
       'DELETE FROM '+TableName[nd.objtype]+
-      ' WHERE '+IdField[nd.objtype]+' = '+IntToStr(nd.id),EmptyParam,0);
+      ' WHERE '+IdField[nd.objtype]+' = '+IntToStr(nd.id));
      n.Delete;
     end;
   end;
@@ -354,7 +354,7 @@ procedure TNetworkWin.aPropertiesExecute(Sender: TObject);
 var
  n:TTreeNode;
  nd:TNodeData;
- rs:TRecordSet;
+ rs:_Recordset;
  port:integer;
  s:string;
 begin
@@ -363,9 +363,9 @@ begin
  if not(n=nil) and not(n.Data=nil) then
   begin
    nd:=n.Data;
-   rs:=TRecordSet.Create(Application);
+   rs:=CoRecordset.Create;
    rs.Open(TableName[nd.objtype],
-    MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockOptimistic,adCmdTable);
+    MainWin.dbCon.ConnectionObject,adOpenDynamic,adLockOptimistic,adCmdTable);
    s:=IdField[nd.objtype]+' = '+IntToStr(nd.id);
    rs.Filter:=s;
    case nd.objtype of
@@ -446,7 +446,7 @@ begin
        end;
      end;
    end;
-   rs.Free;
+   rs:=nil;
   end;
 end;
 

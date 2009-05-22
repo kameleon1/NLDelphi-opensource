@@ -50,7 +50,6 @@ procedure TRoLogger.Execute;
 var
  m:TMemoryStream;
  f:TFileStream;
- c:char;
 begin
   { Place thread code here }
   //buf:=TMemoryStream.Create;

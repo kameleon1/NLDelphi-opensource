@@ -46,4 +46,4 @@ begin
  btnOk.Click;
 end;
 
-end.       gne
+end.

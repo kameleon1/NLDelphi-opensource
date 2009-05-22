@@ -1,5 +1,7 @@
 program Ro;
 
+{$R 'roHTML.res' 'roHTML.rc'}
+
 uses
   Forms,
   ActiveX,
@@ -19,11 +21,12 @@ uses
   roHexTree in 'roHexTree.pas',
   roIdentDock in 'roIdentDock.pas' {IdentDock},
   roLogger in 'roLogger.pas',
-  dsDocHost in 'dsDocHost.pas',
+  roDocHost in 'roDocHost.pas',
   roPaste in 'roPaste.pas' {PasteWin},
   roSettings in 'roSettings.pas' {SetsWin},
   roHTMLHelp in 'roHTMLHelp.pas',
-  roChildFrame in 'roChildFrame.pas' {Frame1: TFrame};
+  roChildFrame in 'roChildFrame.pas' {Frame1: TFrame},
+  VBScript_RegExp_55_TLB in 'VBScript_RegExp_55_TLB.pas';
 
 {$R *.RES}
 

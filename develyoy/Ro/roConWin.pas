@@ -4,14 +4,16 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, roChildWin, OleCtrls, SHDocVw, Menus, ActnList, ScktComp, MSHTML_TLB,
-  StdCtrls, roHexTree, roStuff, roLogger, dsDocHost, ComCtrls, ToolWin;
+  Dialogs, roChildWin, OleCtrls, SHDocVw, Menus, ActnList, ScktComp, MSHTML,
+  StdCtrls, roHexTree, roStuff, roLogger, roDocHost, ComCtrls, ToolWin,
+  Sockets;
 
 type
+  TConReader = class;//forward
   TConnectionWin = class(TChildWin)
     ActionList1: TActionList;
     MainMenu1: TMainMenu;
-    cs: TClientSocket;
+    cs: TTcpClient;
     aConnect: TAction;
     aDisconnect: TAction;
     Connection1: TMenuItem;
@@ -35,13 +37,12 @@ type
       var Cancel: WordBool);
     procedure csError(Sender: TObject; Socket: TCustomWinSocket;
       ErrorEvent: TErrorEvent; var ErrorCode: Integer);
-    procedure csConnecting(Sender: TObject; Socket: TCustomWinSocket);
-    procedure csConnect(Sender: TObject; Socket: TCustomWinSocket);
-    procedure csDisconnect(Sender: TObject; Socket: TCustomWinSocket);
+    procedure csConnect(Sender: TObject);
+    procedure csDisconnect(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure aConnectExecute(Sender: TObject);
     procedure aDisconnectExecute(Sender: TObject);
-    procedure csRead(Sender: TObject; Socket: TCustomWinSocket);
+    procedure csReceive(Sender: TObject; Incoming:string);
     procedure Web1DocumentComplete(Sender: TObject; const pDisp: IDispatch;
       var URL: OleVariant);
     procedure aTTimeExecute(Sender: TObject);
@@ -78,6 +79,7 @@ type
 
     UserName1,UserName2,IdentDid,ModeFlags:string;
     Logger:TRoLogger;
+    ConReader:TConReader;
 
     procedure Msg(pl:TRoParsedLine;IsPingMsg:boolean=false);
     procedure MsgError(s:string;code:string='');
@@ -115,12 +117,21 @@ type
     function GetCompleted(from:string;exclude:TChildWin=nil):string;
   end;
 
-var
-  ConnectionWin: TConnectionWin;
+  TConReader=class(TThread)
+  private
+    FConWin:TConnectionWin;
+    FOutData:string;
+    procedure OutData;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(ConWin:TConnectionWin);
+    destructor Destroy; override;
+  end;
 
 implementation
 
-uses ADODB_TLB, roMain, roMsgWin, roHTMLHelp;
+uses ADODB, ADOInt, roMain, roMsgWin, roHTMLHelp;
 
 {$R *.dfm}
 
@@ -143,6 +154,7 @@ begin
  Web1.OnTranslateAccelerator:=WebTranslateAccelerator;
  TriedNick:=false;
  Logger:=nil;
+ ConReader:=nil;
  HexTree:=THexTree.Create;
  ConnectOnComplete:=false;
  MsgWindows:=TList.Create;
@@ -372,6 +384,7 @@ var
  IsCommand:TCommands;
  p1,p2:string;
  pl:TRoParsedLine;
+ pn:TRoNetworkLine;
  i,j:integer;
  a:array of string;
  date:TDateTime;
@@ -761,11 +774,11 @@ begin
             s:=copy(s,i+1,length(s)-i);
            end;
 
-          cs.Host:=ServerName;
-          cs.Port:=6667;
+          cs.RemoteHost:=ServerName;
+          cs.RemotePort:='6667';
           if not(s='') then
            begin
-            cs.Port:=StrToInt(cutNext(s));//try except?
+            cs.RemotePort:=cutNext(s);//try except?
             if not(s='') then
              begin
               Nick:=cutNext(s);
@@ -775,6 +788,10 @@ begin
           //server gegevens opslaan db?
           DoCaption;
          end;
+        pn:=TRoNetworkLine.Create(cs,
+         'Connecting... ('+cs.RemoteHost+' '+cs.RemotePort+')');
+        Msg(pn);
+        pn.Free;
         cs.Open;
        end;
       icDisconnect:
@@ -869,20 +886,7 @@ begin
 
 end;
 
-procedure TConnectionWin.csConnecting(Sender: TObject;
-  Socket: TCustomWinSocket);
-var
- pl:TRoNetworkLine;
-begin
-  inherited;
- pl:=TRoNetworkLine.Create(Socket,
-  'Connecting... ('+cs.Host+' '+inttostr(cs.Port)+')');
- Msg(pl);
- pl.Free;
-end;
-
-procedure TConnectionWin.csConnect(Sender: TObject;
-  Socket: TCustomWinSocket);
+procedure TConnectionWin.csConnect(Sender: TObject);
 var
  pl:TRoParsedLine;
 begin
@@ -899,10 +903,11 @@ begin
  Logger.logdir:=MainWin.GetLogDir;
  Logger.Resume;
 
- IdentDid:=IntToStr(Socket.LocalPort)+' , '+IntToStr(Socket.RemotePort);
+ ConReader:=TConReader.Create(Self);
+
+ IdentDid:=cs.LocalPort+' , '+cs.RemotePort;
  MainWin.HexTree.SetObject(htIdentD+IdentDid,Self);
- pl:=TRoNetworkLine.Create(Socket,'Connected ('+Socket.RemoteHost+' '+
-  Socket.RemoteAddress+':'+inttostr(Socket.RemotePort)+')');
+ pl:=TRoNetworkLine.Create(cs,'Connected ('+cs.RemoteHost+':'+cs.RemotePort+')');
  Msg(pl);
  pl.Free;
 
@@ -910,7 +915,7 @@ begin
 
  if UserName1='' then UserName1:=Nick;
  if UserName1='' then UserName1:='roIRC';
- if UserName2='' then UserName2:=Socket.LocalHost;
+ if UserName2='' then UserName2:=cs.LocalHostName;
  if FullName='' then FullName:=AppName;
 
  NetSend('USER '+
@@ -921,22 +926,20 @@ begin
  //OPER en PASS commando's?
 end;
 
-procedure TConnectionWin.csDisconnect(Sender: TObject;
-  Socket: TCustomWinSocket);
+procedure TConnectionWin.csDisconnect(Sender: TObject);
 var
  pl:TRoNetworkLine;
 begin
   inherited;
  //assert altijd aangeroepen als de verbinding ook sluit (onerror?)
-
  MainWin.HexTree.SetObject(htIdentD+IdentDid,nil);
- pl:=TRoNetworkLine.Create(Socket,
-  'Disconnected ('+Socket.RemoteHost+''+Socket.ReceiveText+')');
+ pl:=TRoNetworkLine.Create(cs,
+  'Disconnected ('+cs.RemoteHost+''+cs.Receiveln+')');
  Msg(pl);
  pl.Free;
  //reconnect !!!
  //tenzij echt moeten closen want sluiten
-
+ FreeAndNil(ConReader);
  if not(Logger=nil) then
   begin
    Logger.Terminate;
@@ -949,20 +952,18 @@ end;
 procedure TConnectionWin.NetSend(s:string);
 begin
  if not(Logger=nil) then Logger.WriteLog(s);
- cs.Socket.SendText(s+#13#10);
+ cs.Sendln(s);
  //add to logs!
 end;
 
 procedure TConnectionWin.DataByServer(id:integer);
 var
- rs:TRecordSet;
+ rs:_Recordset;
 begin
  ServerId:=id;
- rs:=TRecordSet.Create(Application);
- rs.Open('SELECT * FROM tblServers WHERE server_id='+inttostr(id),
-  MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockReadOnly,adCmdText);
- cs.Host:=VarToStr(rs.Fields.Item['server_host'].Value);
- cs.Port:=rs.Fields.Item['server_defaultport'].Value;
+ rs:=MainWin.dbCon.Execute('SELECT * FROM tblServers WHERE server_id='+inttostr(id));
+ cs.RemoteHost:=VarToStr(rs.Fields.Item['server_host'].Value);
+ cs.RemotePort:=VarToStr(rs.Fields.Item['server_defaultport'].Value);
  //andere poorten bij 2nd pass?
  ServerName:=VarToStr(rs.Fields.Item['server_name'].Value);
  ServerStartUserMode:=rs.Fields.Item['server_connectusermode'].Value;
@@ -970,18 +971,16 @@ begin
   DataByNetwork(rs.Fields.Item['server_network_id'].Value)
  else
   DoCaption;
- rs.Free;
+ rs:=nil;
 end;
 
 procedure TConnectionWin.DataByNetwork(id:integer);
 var
- rs:TRecordSet;
+ rs:_Recordset;
  i:integer;
 begin
  NetworkId:=id;
- rs:=TRecordSet.Create(Application);
- rs.Open('SELECT * FROM tblNetworks WHERE network_id='+inttostr(id),
-  MainWin.dbCon.DefaultInterface,adOpenDynamic,adLockReadOnly,adCmdText);
+ rs:=MainWin.dbCon.Execute('SELECT * FROM tblNetworks WHERE network_id='+inttostr(id));
  NetworkName:=VarToStr(rs.Fields.Item['network_name'].Value);
  Nick:=VarToStr(rs.Fields.Item['network_nick'].Value);
  AltNicks:=VarToStr(rs.Fields.Item['network_altnicks'].Value);
@@ -993,21 +992,21 @@ begin
  UserName1:=copy(EMail,1,i-1);
  UserName2:=copy(EMail,i+1,length(EMail)-i);
  //identd hier?
- rs.Free;
+ rs:=nil;
  if ServerId=-1 then
   begin
    //select server, minst recent mee geconnecteerd?
-   rs:=TRecordSet.Create(Application);
+   rs:=CoRecordset.Create;
    rs.CursorLocation:=adUseClient;
    rs.Open('SELECT TOP 1 * FROM tblServers WHERE server_network_id='+inttostr(NetworkId)+
     ' ORDER BY server_lastconnect',
-    Mainwin.dbCon.DefaultInterface,adOpenDynamic,adLockOptimistic,adCmdText);
+    MainWin.dbcon.ConnectionObject,adOpenDynamic,adLockOptimistic,adCmdText);
    DataByServer(rs.Fields.Item['server_id'].Value);
    rs.Update(
     VarArrayOf(['server_lastconnect']),
     VarArrayOf([VarFromDateTime(Now)])
    );
-   rs.Free;
+   rs:=nil;
   end
  else
   DoCaption;
@@ -1042,16 +1041,13 @@ begin
  cs.Close;
 end;
 
-procedure TConnectionWin.csRead(Sender: TObject; Socket: TCustomWinSocket);
+procedure TConnectionWin.csReceive(Sender: TObject; Incoming:string);
 var
  s:string;
  i:integer;
 begin
   inherited;
- repeat
-  s:=Socket.ReceiveText;
-  inbuffer:=inbuffer+s;
- until s='';
+ inbuffer:=inbuffer+Incoming;
  repeat
   i:=1;
   while (i<=length(inbuffer)) and not(inbuffer[i] in [#10,#13]) do inc(i);
@@ -1821,5 +1817,39 @@ begin
  //display?
 end;
 
+{ TConReader }
+
+constructor TConReader.Create(ConWin: TConnectionWin);
+begin
+  inherited Create(true);
+  FConWin:=ConWin;
+  Resume;
+end;
+
+destructor TConReader.Destroy;
+begin
+  FConWin:=nil;
+  inherited;
+end;
+
+procedure TConReader.Execute;
+var
+  c:cardinal;
+begin
+  while not(Terminated) and FConWin.cs.Connected do
+    if FConWin.cs.WaitForData(1000) then
+     begin
+      c:=$1000;
+      SetLength(FOutData,c);
+      c:=FConWin.cs.ReceiveBuf(FOutData[1],c);
+      SetLength(FOutData,c);
+      Synchronize(OutData);
+     end;
+end;
+
+procedure TConReader.OutData;
+begin
+  FConWin.csReceive(nil,FOutData);
+end;
 
 end.

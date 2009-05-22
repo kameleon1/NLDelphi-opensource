@@ -5,11 +5,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, roDockWin, ScktComp, ComCtrls, StdCtrls, ExtCtrls, OleCtrls,
-  SHDocVw, dsDocHost, MSHTML_TLB, Menus, ActnList;
+  SHDocVw, roDocHost, MSHTML, Menus, ActnList, Sockets;
 
 type
   TIdentDock = class(TDockWin)
-    ServerSocket1: TServerSocket;
+    TcpServer1: TTcpServer;
     Web1: TRestrictedWebBrowser;
     PopupMenu1: TPopupMenu;
     ActionList1: TActionList;
@@ -20,17 +20,7 @@ type
     N1: TMenuItem;
     imetags1: TMenuItem;
     Wordwrap1: TMenuItem;
-    procedure ServerSocket1ClientConnect(Sender: TObject;
-      Socket: TCustomWinSocket);
-    procedure ServerSocket1ClientDisconnect(Sender: TObject;
-      Socket: TCustomWinSocket);
-    procedure ServerSocket1ClientError(Sender: TObject;
-      Socket: TCustomWinSocket; ErrorEvent: TErrorEvent;
-      var ErrorCode: Integer);
-    procedure ServerSocket1ClientRead(Sender: TObject;
-      Socket: TCustomWinSocket);
-    procedure ServerSocket1Listen(Sender: TObject;
-      Socket: TCustomWinSocket);
+    procedure TcpServer1Listening(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Web1BeforeNavigate2(Sender: TObject; const pDisp: IDispatch;
@@ -43,9 +33,11 @@ type
     procedure aListenExecute(Sender: TObject);
     procedure aTTimeExecute(Sender: TObject);
     procedure aWordWrapExecute(Sender: TObject);
+    procedure TcpServer1GetThread(Sender: TObject;
+      var ClientSocketThread: TClientSocketThread);
+    procedure TcpServer1Accept(Sender: TObject;
+      ClientSocket: TCustomIpClient);
   private
-    { Private declarations }
-
     WebDoc:IHTMLDocument2;
     WebNavOk,WebNavKeepContent:boolean;
     WebNavKeptContent:WideString;
@@ -53,10 +45,7 @@ type
     rotateBlock:IHTMLElement;
 
     procedure Msg(s:string);
-    procedure DoIncoming(Socket: TCustomWinSocket;s:string);
-    procedure NetSend(Socket: TCustomWinSocket;s:string);
-  public
-    { Public declarations }
+    function DoIncoming(Socket:TCustomIpClient; s:string):string;
   end;
 
 var
@@ -69,76 +58,21 @@ uses roMain, roStuff, roConWin, roHTMLHelp;
 {$R *.dfm}
 
 type
- TSData=class(TObject)
+  TSThread=class(TClientSocketThread)
   private
+    FOutMsg:string;
+    procedure Msg(x:string);
+    procedure DoOutMsg;
+    procedure DoProcess;
   public
-   inbuffer:string;
- end;
-
-procedure TIdentDock.ServerSocket1ClientConnect(Sender: TObject;
-  Socket: TCustomWinSocket);
-begin
-  inherited;
- Msg('Connect '+Socket.RemoteHost+' ('+Socket.RemoteAddress+')');
- Socket.Data:=TSData.Create;
-end;
-
-procedure TIdentDock.ServerSocket1ClientDisconnect(Sender: TObject;
-  Socket: TCustomWinSocket);
-begin
-  inherited;
- Msg('Disconnect '+Socket.RemoteHost+' ('+Socket.RemoteAddress+')');
- if not(Socket.Data=nil) then
-  begin
-   TSData(Socket.Data).Free;
-   Socket.Data:=nil;
+    procedure DoAccept;
   end;
-end;
 
-procedure TIdentDock.ServerSocket1ClientError(Sender: TObject;
-  Socket: TCustomWinSocket; ErrorEvent: TErrorEvent;
-  var ErrorCode: Integer);
-begin
-  inherited;
- Msg('Error: '+SysErrorMessage(ErrorCode));
- ErrorCode:=0;
- Socket.Close;
- //Disconnect event??
-end;
-
-procedure TIdentDock.ServerSocket1ClientRead(Sender: TObject;
-  Socket: TCustomWinSocket);
-var
- s:string;
- i:integer;
-begin
-  inherited;
- with TSData(Socket.Data) do
-  begin
-   repeat
-    s:=Socket.ReceiveText;
-    inbuffer:=inbuffer+s;
-   until s='';
-   repeat
-    i:=1;
-    while (i<=length(inbuffer)) and not(inbuffer[i]=#13) do inc(i);
-    if i<=length(inbuffer) then
-     begin
-      DoIncoming(Socket,copy(inbuffer,1,i-1));
-      if (i<length(inbuffer)) and (inbuffer[i+1]=#10) then inc(i);
-      inbuffer:=copy(inbuffer,i+1,length(inbuffer)-i);
-      i:=1;
-     end;
-   until i>length(inbuffer);
-  end;
-end;
-
-procedure TIdentDock.ServerSocket1Listen(Sender: TObject;
-  Socket: TCustomWinSocket);
+procedure TIdentDock.TcpServer1Listening(Sender: TObject);
 begin
   inherited;
  aListen.Caption:='Stop server';
- Msg('Listening on port '+IntToStr(ServerSocket1.Port));
+ Msg('Listening on port '+TcpServer1.LocalPort);
 end;
 
 procedure TIdentDock.FormCreate(Sender: TObject);
@@ -148,9 +82,9 @@ begin
  rotateBlockPos:=0;
  rotateBlock:=nil;
  Web1.PopupMenu:=PopupMenu1;
+ if not(Web1.HandleAllocated) then Web1.HandleNeeded;
  //Web1.OnTranslateAccelerator:=WebTranslateAccelerator;
  WebDoc:=nil;
- if not(Web1.HandleAllocated) then Web1.HandleNeeded;
  WebNavOk:=true;
  WebNavKeepContent:=false;
  Web1.Navigate('res://'+application.ExeName+'/base');
@@ -161,7 +95,7 @@ begin
  SetStyle(WebDoc,'.time',true);
 
  try
-  ServerSocket1.Open;
+  TcpServer1.Open;
  except
   on e:Exception do
    begin
@@ -178,25 +112,17 @@ begin
  //let op! wordt ook aangeroepen bij sluiten toolbar, beter OnDestroy 
 end;
 
-procedure TIdentDock.DoIncoming(Socket: TCustomWinSocket;s:string);
+function TIdentDock.DoIncoming(Socket:TCustomIpClient; s:string):string;
 var
  cw:TConnectionWin;
 begin
  Msg('Request "'+s+'"');
  cw:=MainWin.HexTree.GetObject(htIdentD+s);
  if cw=nil then
-  NetSend(Socket,s+' : ERROR : NO-USER')
+   Result:=s+' : ERROR : NO-USER'
  else
-  begin
-   NetSend(Socket,
-    cw.IdentdReply(Socket.RemoteHost+' ('+Socket.RemoteAddress+')'));
-  end;
-end;
-
-procedure TIdentDock.NetSend(Socket: TCustomWinSocket;s:string);
-begin
- Socket.SendText(s+#13#10);
- Msg('Reply "'+s+'"');
+   Result:=cw.IdentdReply(Socket.RemoteHost+':'+Socket.RemotePort+')');
+ Msg('Reply "'+Result+'"');
 end;
 
 procedure TIdentDock.Web1BeforeNavigate2(Sender: TObject;
@@ -312,7 +238,7 @@ end;
 procedure TIdentDock.FormDestroy(Sender: TObject);
 begin
   inherited;
- ServerSocket1.Close;
+ TcpServer1.Close;
 end;
 
 procedure TIdentDock.FormShow(Sender: TObject);
@@ -334,9 +260,9 @@ end;
 procedure TIdentDock.aListenExecute(Sender: TObject);
 begin
   inherited;
- if ServerSocket1.Active then
+ if TcpServer1.Active then
   try
-   ServerSocket1.Close;
+   TcpServer1.Close;
    aListen.Caption:='Start server';
    Msg('Stopped listening.');
   except
@@ -348,7 +274,7 @@ begin
   end
  else
   try
-   ServerSocket1.Open;
+   TcpServer1.Open;
   except
    on e:Exception do
     begin
@@ -376,6 +302,68 @@ begin
   WebDoc.body.style.whiteSpace:='nowrap'
  else
   WebDoc.body.style.whiteSpace:='';
+end;
+
+procedure TIdentDock.TcpServer1GetThread(Sender: TObject;
+  var ClientSocketThread: TClientSocketThread);
+begin
+  inherited;
+  ClientSocketThread:=TSThread.Create(TcpServer1.ServerSocketThread);
+end;
+
+{ TSThread }
+
+procedure TSThread.DoOutMsg;
+begin
+  IdentDock.Msg(FOutMsg);
+end;
+
+procedure TSThread.Msg(x: string);
+begin
+  FOutMsg:=x;
+  Synchronize(DoOutMsg);
+end;
+
+procedure TSThread.DoProcess;
+begin
+  FOutMsg:=IdentDock.DoIncoming(ClientSocket,FOutMsg);
+end;
+
+procedure TIdentDock.TcpServer1Accept(Sender: TObject;
+  ClientSocket: TCustomIpClient);
+begin
+  inherited;
+  (ClientSocket.GetThreadObject as TSThread).DoAccept;
+end;
+
+procedure TSThread.DoAccept;
+var
+  tc:Cardinal;
+begin
+  tc:=GetTickCount;
+  Msg('Connect '+ClientSocket.RemoteHost+':'+ClientSocket.RemotePort);
+  try
+    while not(Terminated) and ClientSocket.Connected do
+     begin
+      if ClientSocket.WaitForData(1000) then
+       begin
+        FOutMsg:=ClientSocket.Receiveln;
+        Synchronize(DoProcess);
+        ClientSocket.Sendln(FOutMsg);
+        tc:=GetTickCount;
+       end
+      else
+        if cardinal(GetTickCount-tc)>30000 then
+          raise Exception.Create('Connection timed out');
+     end;
+  except
+    on e:Exception do
+     begin
+      Msg('Error: '+e.Message);
+      ClientSocket.Disconnect;
+     end;
+  end;
+  Msg('Disconnect '+ClientSocket.RemoteHost+':'+ClientSocket.RemotePort);
 end;
 
 end.

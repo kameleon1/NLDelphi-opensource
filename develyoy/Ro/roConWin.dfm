@@ -55,7 +55,7 @@ inherited ConnectionWin: TConnectionWin
   object ActionList1: TActionList
     Images = MainWin.ImageList1
     Left = 8
-    Top = 88
+    Top = 8
     object aConnect: TAction
       Category = 'Connect'
       Caption = 'Connect'
@@ -98,7 +98,7 @@ inherited ConnectionWin: TConnectionWin
   object MainMenu1: TMainMenu
     Images = MainWin.ImageList1
     Left = 40
-    Top = 88
+    Top = 8
     object Connection1: TMenuItem
       Caption = 'Connection'
       GroupIndex = 20
@@ -123,26 +123,14 @@ inherited ConnectionWin: TConnectionWin
       end
     end
   end
-  object cs: TClientSocket
-    Active = False
-    ClientType = ctNonBlocking
-    Port = 0
-    OnConnecting = csConnecting
-    OnConnect = csConnect
-    OnDisconnect = csDisconnect
-    OnRead = csRead
-    OnError = csError
-    Left = 72
-    Top = 88
-  end
   object OpenDialog1: TOpenDialog
     InitialDir = '.'
     Left = 104
-    Top = 88
+    Top = 8
   end
   object PopupMenu1: TPopupMenu
     Left = 136
-    Top = 88
+    Top = 8
     object Copy1: TMenuItem
       Caption = 'Copy'
       OnClick = Copy1Click
@@ -154,5 +142,11 @@ inherited ConnectionWin: TConnectionWin
       Caption = 'Select all'
       OnClick = Selectall1Click
     end
+  end
+  object cs: TTcpClient
+    OnConnect = csConnect
+    OnDisconnect = csDisconnect
+    Left = 72
+    Top = 8
   end
 end

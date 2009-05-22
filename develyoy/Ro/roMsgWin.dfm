@@ -13,9 +13,7 @@ inherited MessageWin: TMessageWin
   object Splitter1: TSplitter
     Left = 285
     Top = 0
-    Width = 3
     Height = 237
-    Cursor = crHSplit
     Align = alRight
   end
   object Com: TMemo
@@ -75,7 +73,7 @@ inherited MessageWin: TMessageWin
   object ActionList1: TActionList
     Images = MainWin.ImageList1
     Left = 8
-    Top = 48
+    Top = 8
     object aTTime: TAction
       Category = 'View'
       Caption = 'Time tags'
@@ -163,7 +161,7 @@ inherited MessageWin: TMessageWin
   object MainMenu1: TMainMenu
     Images = MainWin.ImageList1
     Left = 40
-    Top = 48
+    Top = 8
     object View1: TMenuItem
       Caption = 'View'
       GroupIndex = 20
@@ -209,7 +207,7 @@ inherited MessageWin: TMessageWin
   end
   object ImageList1: TImageList
     Left = 72
-    Top = 48
+    Top = 8
     Bitmap = {
       494C010106000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
@@ -618,7 +616,7 @@ inherited MessageWin: TMessageWin
     Images = MainWin.ImageList1
     OnPopup = PopupMenu1Popup
     Left = 104
-    Top = 48
+    Top = 8
     object Copy1: TMenuItem
       Caption = 'Copy'
       OnClick = Copy1Click

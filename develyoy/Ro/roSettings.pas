@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, OleCtrls, SHDocVw, dsDocHost, ExtCtrls, StdCtrls;
+  Dialogs, OleCtrls, SHDocVw, roDocHost, ExtCtrls, StdCtrls;
 
 type
   TSetsWin = class(TForm)

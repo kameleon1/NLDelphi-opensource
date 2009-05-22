@@ -2,7 +2,7 @@ unit roHTMLHelp;
 
 interface
 
-uses MSHTML_TLB, ActnList;
+uses MSHTML, ActnList;
 
 function FindStyle(WebDoc:IHTMLDocument2;const selector:WideString):IHTMLStyleSheetRule;
 procedure ToggleStyle(WebDoc:IHTMLDocument2;action:TAction;selector:WideString);
