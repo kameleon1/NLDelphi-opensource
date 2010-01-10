@@ -1,4 +1,23 @@
+{ *************************************************************************** }
+{                                                                             }
+{ NetAPI  -  www.nldelphi.com Open Source Delphi runtime library              }
+{                                                                             }
+{ Initiator: Albert de Weerd (aka NGLN)                                       }
+{ License: Free to use, free to modify                                        }
+{ Website: None                                                               }
+{ SVN path: http://svn.nldelphi.com/nldelphi/opensource/ngln/                 }
+{                                                                             }
+{ *************************************************************************** }
+{                                                                             }
+{ Last edit by: Albert de Weerd                                               }
+{ Date: January 10, 2010                                                      }
+{ Version: 1.0.0.0                                                            }
+{                                                                             }
+{ *************************************************************************** }
+
 unit NetAPI;
+
+{$BOOLEVAL OFF}
 
 interface
 
