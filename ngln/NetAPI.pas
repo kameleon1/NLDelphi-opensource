@@ -4,7 +4,7 @@
 {                                                                             }
 { Initiator: Albert de Weerd (aka NGLN)                                       }
 { License: Free to use, free to modify                                        }
-{ Website: None                                                               }
+{ Website: http://www.nldelphi.com/forum/showthread.php?t=35215               }
 { SVN path: http://svn.nldelphi.com/nldelphi/opensource/ngln/                 }
 {                                                                             }
 { *************************************************************************** }
