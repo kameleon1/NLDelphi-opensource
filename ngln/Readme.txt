@@ -1,5 +1,6 @@
-Table of contents
-=================
+================================
+Table of contents of this folder
+================================
 
 
 NLDArrows
@@ -86,3 +87,18 @@ A runtime unit with several routines for active directory users and groups.
 NLDSparsList.pas
 ----------------
 TSparseList and TSparseMatrix are classes for optimized sparse storage of arbitrary data.
+
+
+
+==============================
+Contributions to other folders
+==============================
+
+
+..\walterheck\nldstringgrid\
+----------------------------
+TNLDStringGrid is a TStringGrid clone with extra functionality like columns, merged cells, readonly cells and much more. [Rewritten completely v2.0]
+
+
+..\svg_1986\nldtrayicon\
+TNLDTrayIcon is a non-visual component that adds system tray icon capabilities to the application. [Added functionality, fixed bugs]
