@@ -12,6 +12,11 @@ unit NLDRcs_Resize;
   30-03-2018: * allow also resize < factor 1
   09-06-2018: * Replaced the conditional compilations by parameters in the create function
   15-06-2018: * Resizing is more linear now (Client sizes used)
+  23-06-2018: * "Create" and "Resize" can now have any TControl type to start from
+  28-06-2018: * Ingored not found components now (were not existing during creation)
+  11-07-2018: * Added the 'MaxFontSize' property
+  16-08-2018: * Also adapted the font size of the toplevel
+              * Added the 'MinFontSize' property
 }
 
 {$P+} // Open Strings ON
@@ -44,7 +49,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Forms, Dialogs, Controls,
-  StdCtrls, Buttons, ExtCtrls, ComCtrls, {QComCtrls,} Mask, Grids, spin;
+  StdCtrls, Buttons, ExtCtrls, ComCtrls, Mask, Grids, Spin, Math;
 
 type
   TDimension = record
@@ -68,9 +73,11 @@ type
     procedure MyGetDims(Control: TControl; TopLevel: boolean);
     procedure MyChangeDims(Control: TControl; TopLevel: boolean);
   public
-    constructor Create(F: TForm; Fnct: TResizeCallbackFunction = nil; ResizeFont: boolean = false);
+    MaxFontSize: integer;
+    MinFontSize: integer;
+    constructor Create(F: TControl; Fnct: TResizeCallbackFunction = nil; ResizeFont: boolean = false);
     destructor Destroy; override;
-    procedure Resize(F: TForm);
+    procedure Resize(F: TControl);
   end;
 
 implementation
@@ -128,6 +135,23 @@ var
   NewHeight: DWord;
   Tsg: TStringGrid;
   Tdg: TDrawGrid;
+  Found: boolean;
+  Factor: real;
+
+  procedure AdaptFontSize(Ind: integer);
+  begin
+    if FResizeFont then // adapt the toplevel fontsize to the new dimensions
+    begin
+      Factor := Min(VFactor, HFactor);
+      S := Trunc(Factor * MyDims[Ind].S);
+
+      if (MaxFontSize > 0) and (S > MaxFontSize) then S := MaxFontSize;
+      if (MinFontSize > 0) and (S < MinFontSize) then S := MinFontSize;
+
+      TEdit(Control).Font.Size := S;
+    end;
+  end;
+
 begin
 
   if TopLevel then // toplevel, get the new dimensions
@@ -137,22 +161,26 @@ begin
 
     HFactor := NewWidth / MyDims[0].W;
     VFactor := NewHeight / MyDims[0].H;
+
+    AdaptFontSize(0);
   end
   else
   begin
     // find the index of the control to resize
 
     Index := 0;
+    Found := false;
     while Index <= High(MyDims) do
     begin
       if Control.Name = MyDims[Index].Name then
       begin
+        Found := true;
         break;
       end;
       inc(Index); // next in the list
     end;
 
-    // Index is always >= 0 here
+    if not Found then exit; // start dimensions are not available
 
     if (not assigned(CallbackFunction)) or
       (CallBackFunction(Control, VFactor, HFactor,
@@ -167,12 +195,7 @@ begin
       L := Trunc(HFactor * MyDims[Index].L);
       T := Trunc(VFactor * MyDims[Index].T);
 
-      if FResizeFont then
-      begin
-        if VFactor < HFactor then S := Trunc(VFactor * MyDims[Index].S)
-        else S := Trunc(HFactor * MyDims[Index].S);
-        TEdit(Control).Font.Size := S;
-      end;
+      AdaptFontSize(Index);
 
       if (Control is TComboBox) then // special case
       begin
@@ -183,64 +206,64 @@ begin
       end
       else
         if ((Control is TLabel) or
-          (Control is TEdit) or
-          (Control is TLabeledEdit) or
-          (Control is TSpinEdit) or
-          (Control is TMaskEdit)
-          ) then
-        begin
+        (Control is TEdit) or
+        (Control is TLabeledEdit) or
+        (Control is TSpinEdit) or
+        (Control is TMaskEdit)
+        ) then
+      begin
           // do not set the sizes here, set 'autosize' to true in the object inspector
+        Control.Left := L;
+        Control.Top := T;
+        if not (Control is TLabel) then Control.ClientWidth := W;
+      end
+      else
+        if Control is TUpDown then
+      begin
+        if TUpDown(Control).Associate = nil then
+        begin
           Control.Left := L;
           Control.Top := T;
-          if not (Control is TLabel) then Control.ClientWidth := W;
+          Control.Width := W;
+          Control.Height := H;
         end
         else
-          if Control is TUpDown then
-          begin
-            if TUpDown(Control).Associate = nil then
-            begin
-              Control.Left := L;
-              Control.Top := T;
-              Control.Width := W;
-              Control.Height := H;
-            end
-            else
-            begin
-              Control.Left :=
-                TUpDown(Control).Associate.Left + TUpDown(Control).Associate.Width;
-              Control.Top := TUpDown(Control).Associate.Top;
-              Control.Height := TUpDown(Control).Associate.Height;
-              Control.Width := W;
-            end;
-          end
-          else
-            if Control is TStringGrid then
-            begin
-              Tsg := Control as TStringGrid;
+        begin
+          Control.Left :=
+            TUpDown(Control).Associate.Left + TUpDown(Control).Associate.Width;
+          Control.Top := TUpDown(Control).Associate.Top;
+          Control.Height := TUpDown(Control).Associate.Height;
+          Control.Width := W;
+        end;
+      end
+      else
+        if Control is TStringGrid then
+      begin
+        Tsg := Control as TStringGrid;
 
-              Tsg.Left := L;
-              Tsg.Top := T;
-              Tsg.DefaultColWidth := Trunc(HFactor * MyDims[Index].D1);
-              Tsg.DefaultRowHeight := Trunc(VFactor * MyDims[Index].D2);
-              Tsg.ClientWidth := W;
-              Tsg.ClientHeight := H;
-            end
-            else
-              if Control is TDrawGrid then
-              begin
-                Tdg := Control as TDrawGrid;
+        Tsg.Left := L;
+        Tsg.Top := T;
+        Tsg.DefaultColWidth := Trunc(HFactor * MyDims[Index].D1);
+        Tsg.DefaultRowHeight := Trunc(VFactor * MyDims[Index].D2);
+        Tsg.ClientWidth := W;
+        Tsg.ClientHeight := H;
+      end
+      else
+        if Control is TDrawGrid then
+      begin
+        Tdg := Control as TDrawGrid;
 
-                Tdg.Left := L;
-                Tdg.Top := T;
-                Tdg.DefaultColWidth := Trunc(HFactor * MyDims[Index].D1);
-                Tdg.DefaultRowHeight := Trunc(VFactor * MyDims[Index].D2);
-                Tdg.ClientWidth := W;
-                Tdg.ClientHeight := H;
-              end
-              else
-              begin
-                Control.SetBounds(L, T, W, H); // default
-              end;
+        Tdg.Left := L;
+        Tdg.Top := T;
+        Tdg.DefaultColWidth := Trunc(HFactor * MyDims[Index].D1);
+        Tdg.DefaultRowHeight := Trunc(VFactor * MyDims[Index].D2);
+        Tdg.ClientWidth := W;
+        Tdg.ClientHeight := H;
+      end
+      else
+      begin
+        Control.SetBounds(L, T, W, H); // default
+      end;
     end;
 
   end;
@@ -253,18 +276,21 @@ begin
       MyChangeDims(TWinControl(Control).Controls[I], false);
     end;
   end;
+
 end;
 
-constructor TMyResize.Create(F: TForm; Fnct: TResizeCallbackFunction = nil;
-                             ResizeFont: boolean = false);
+constructor TMyResize.Create(F: TControl; Fnct: TResizeCallbackFunction = nil;
+  ResizeFont: boolean = false);
 begin
   inherited Create;
   CallbackFunction := Fnct;
   FResizeFont := ResizeFont;
   MyGetDims(F, true); // get the original dimensions
+  MaxFontSize := 0;
+  MinFontSize := 0;
 end;
 
-procedure TMyResize.Resize(F: TForm);
+procedure TMyResize.Resize(F: TControl);
 begin
   MyChangeDims(F, true); // do resize of all components
 end;
