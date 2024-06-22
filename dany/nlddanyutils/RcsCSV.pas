@@ -374,8 +374,8 @@ var
       Result := false;
       exit;
     end;
-    TmpS := StringReplace(Fields[FieldNo], '.', DecimalSeparator, []);
-    TmpS := StringReplace(TmpS, ',', DecimalSeparator, []);
+    TmpS := StringReplace(Fields[FieldNo], '.', FormatSettings.DecimalSeparator, []);
+    TmpS := StringReplace(TmpS, ',', FormatSettings.DecimalSeparator, []);
     try
       V := StrToFloat(TmpS);
     except
